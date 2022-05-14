@@ -1,19 +1,19 @@
 {
-    "id": "036BBAC9",
-    "path": "C:/Projects/Consulting Project 2022 - Dementia/Code/modeling.R",
-    "project_path": "Code/modeling.R",
+    "id": "289D5F59",
+    "path": "C:/Projects/Consulting22_Dementia/Code/createAnalysisData.R",
+    "project_path": "Code/createAnalysisData.R",
     "type": "r_source",
-    "hash": "1486154671",
+    "hash": "0",
     "contents": "",
     "dirty": false,
-    "created": 1652467056413.0,
+    "created": 1652467043976.0,
     "source_on_save": false,
-    "relative_order": 3,
+    "relative_order": 2,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "83,13",
-        "scrollLine": "79"
+        "cursorPosition": "99,2",
+        "scrollLine": "0"
     },
     "folds": "",
     "lastKnownWriteTime": 1652463900,

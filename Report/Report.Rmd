@@ -8,8 +8,8 @@ output: pdf_document
 ```{r setup, include=FALSE, message=F, warning=F}
 knitr::opts_chunk$set(echo = F)
 library(dplyr); library(ggplot2); library(survival); library(survminer)
-data_path <- "C:/Projects/Consulting Project 2022 - Dementia/Data"
-output_path <- "C:/Projects/Consulting Project 2022 - Dementia/Outputs/"
+data_path <- "C:/Projects/Consulting22_Dementia/Data"
+output_path <- "C:/Projects/Consulting22_Dementia/Outputs/"
 load(file.path(data_path, "Analysis Data.RData"))
 load(file.path(output_path, "FinalModelingData.RData"))
 load(file.path(output_path, "FinalModel.RData"))
@@ -173,12 +173,12 @@ xx <- as.data.frame(cox.zph(model2)$table)
 names(xx) <- c("Test Stat.", "D.O.F.", "P-Value")
 knitr::kable(xx, caption = "Chi-Square Test assessing Proportional Hazards")
 ```
-![Proportional Hazards Assumption Plots](C:/Projects/Consulting Project 2022 - Dementia/Report/Images/PH_Plot.png)
+![Proportional Hazards Assumption Plots](C:/Projects/Consulting22_Dementia/Report/Images/PH_Plot.png)
 
 
 For the linearity assumption of the Cox PH model to hold, a plot of the Martingale residuals should be approximately linear. As can be seen in Figure XX below, this assumption is likely violated. 
 
-![Residuals Plot-Linearity Assumption](C:/Projects/Consulting Project 2022 - Dementia/Report/Images/Residuals_Plot.png)
+![Residuals Plot-Linearity Assumption](C:/Projects/Consulting22_Dementia/Report/Images/Residuals_Plot.png)
 
 
 ## Code
