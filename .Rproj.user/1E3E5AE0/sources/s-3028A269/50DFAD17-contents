@@ -1,0 +1,198 @@
+---
+title: "Work Status, Cognitive Function, and Dementia"
+author: "Jonathon Hirschi"
+date: "Statistical Consulting, Spring 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE, message=F, warning=F}
+knitr::opts_chunk$set(echo = F)
+library(dplyr); library(ggplot2); library(survival); library(survminer)
+data_path <- "D:/Projects/Consulting Project 2022 - Demensia/Data"
+output_path <- "D:/Projects/Consulting Project 2022 - Demensia/Outputs/"
+load(file.path(data_path, "Analysis Data.RData"))
+load(file.path(output_path, "FinalModelingData.RData"))
+load(file.path(output_path, "FinalModel.RData"))
+```
+
+## Introduction
+
+Alzheimer's &]and related dementias are an area of increased research focus with an aging population. Various disparities in rates of dementia have been documented, including gender and racial disparities^[Yaffe 2013]. Productive work is hypothesized to reduce the rates of incident dementia. In this project, the association between having a paid job and the rates of dementia for older adults is analyzed. Additionally, the difference in this effect by race is examined. The goal of this report is to model the time until incident dementia and examine the effect of working for pay. Also, the how the effect of working for pay interacts with the race of the participant will be studied.
+
+## Data Description
+
+The Health, Aging, and Body Composition (HABC) study followed 3,075 black and white adults over 11 years, beginning in 1997. All participants were considered "community-dwelling" and "highly functioning", indicating that they were independent and not medically institutionalized. The study was conducted in one of two sites: the areas surrounding Pittsburgh, Pennsylvania and Memphis, Tennessee. In year 1, participant demographic characteristics were collected, including race (black or white), gender (male or female) family income level and years of education completed. Additionally, a genetic study examined a protein called apolipoprotein E (APOE), known to be associated with Alzheimer's disease. This analysis of the protein assigned allele types to the participants. From years 1 to 11^[Some participants were followed longer in sub-studies which were not utilized in this analysis.], participant's were examined with the Modified Mini-Mental State Exam (3Ms)^[https://link.springer.com/referenceworkentry/10.1007/978-0-387-79948-3_530#:~:text=The%20Modified%20Mini%2DMental%20State,and%20some%20other%20minor%20changes.]. Additionally, various questionnaires and medical examinations were carried out over those years. A survey question asking whether the participant had worked for pay in the past year was collected. Summary values for the variables used are presented below.
+
+
+## Analysis and Results
+
+A Cox Proportional Hazards (PH) model was fit to the HABC data. Although the model coefficients made sense theoretically, some of the key assumptions of the Cox PH model were apparently violated^[See Appendix 1 for a more thorough discussion.]. Model results should therefore be interpreted with caution. In order to examine how dementia evolved over time, participants were only included in the model if they were free of dementia in year 1.
+
+The final model coefficients are presented below in Table XX. The exponentiated negative version of the model coefficient gives the opposite interpretation of a hazard defined above: values less than 1 correspond to increased risk in incident dementia and values less than 1 correspond to decreased risk. The upper and lower values from the 95% confidence interval (CI) are included, and the associated p-values are related to whether these intervals cross 1 (i.e. no effect).
+
+```{r}
+  model_df <- data.frame(summary(model2)$conf.int)
+  model_df$p <- summary(model2)$coefficients[,"Pr(>|z|)"]
+  model_df <- round(model_df, 3)
+  names(model_df) <- c("Exp. Coef. Value", "Exp. Negative Coef. Value", "Lower 95% C.I. Value", "Upper 95% C.I. Value", "P-Value")
+  rownames(model_df) <- c("Year 1 Age", "Site", "Gender (Female)", "APOE-e4", "Education (Post-HS)", "Education (HS Grad)", "Income-Class 1", "Income-Class 2", "Income- Class 4", "Race (White)", "Worked for Pay (True)", "Interaction (White+Worked)")
+  knitr::kable(model_df, caption = "Final Model Coefficients")
+```
+
+Predictors^[*Terminology Note: * The language "predictor" will be used, but other terms are used such as "covariate" or "independent variable".] with p-values less than 0.05 are considered to have relatively strong evidence that they had an effect on the rate of incident dementia. Working for pay was associated with a slightly decreased risk in dementia, but this effect was not significantly different from no effect. The 95% CI is very wide, indicating substantial variability in this effect. Race was significantly different from 1, and the interaction effect between race and paid work was also significant at the 0.05 level. In other words, given that an individual worked for pay, they were at a greater risk of developing dementia if they were white than if they were black.
+
+Women were at a higher risk of incident dementia than men^[The associated coefficient was 1-1.26], all other variables equal. The e4 variant of the APOE protein was associated with an increased risk. Participants that had either a high school education or postsecondary education were at a lower risk for developing incident dementia than participants with less than a high school education^[Coefficients ranged from 0.66-0.96 for post high school education, and from 0.73-1.10 for postsecondary], though the effect of postsecondary education was not significantly different from 1.
+
+## Discussion
+
+Since the diagnostics of the Cox PH model were poor, all findings should considered cautiously and further research should focus on identifying and resolving these issues. One potential resolution would be to add time-varying predictors, or consider a different survival analysis model entirely that makes a less restrictive set of assumptions. Another potential area of research would be to review influential papers in the field that utilized Cox PH models, such as Yaffe 2013, to verify if the models similarly violated assumptions. 
+
+With the reservations about model diagnostics in mind, many of the effects observed in the model matched the theoretical expectations, including the effects of gender, the APOE protein, education, and race. While the effect of working for pay could not be distinguished from no effect, the interaction with race was statistically significant. Black participants who worked for pay were at a lower risk than their white counterparts. The treatment of paid work was coarse. Further research could examine whether the quantity of work is related to the rates of dementia. Attrition due to death was not accounted for in this study, and it could be accounted for in future work. Competing risk analysis could also be utilized to account for other health conditions.
+
+## Methods
+
+### Data and Processing
+
+The response variables were the onset of incident dementia and the associated year of onset. This response variable had to be constructed using hospital visits, medical records, and score on the 3Ms test. In years 1, 3, 5, 8, 10, and 11, participant medication prescriptions were recorded. The first year that dementia medications were prescribed was recorded. Next, participant medical examinations were searched for doctor diagnoses of dementia. Again, the earliest year associated with a dementia diagnosis was recorded. Finally, participants 3Ms scores were collected over the same time period, and participants were considered to have dementia if they had a 3Ms score of less than 90. If any of these conditions were met for dementia, the earliest year associated with any of these methods was used as the onset year of dementia. Participants were filtered out if they were categorized as having dementia in year 1. There was sufficient data to construct the response variable in years 1, 3, 5, 8, 10, and 11 of the study.
+
+The main predictor of interest is whether the participant worked for pay. Other predictor variables were included in an attempt to control for effects that are known to be correlated with rates of dementia. The other predictor variables were all recorded in year 1 of the study and considered fixed in time. Age at year 1 of the study was the only continuous predictor. Both race and gender were coded as binary variables in the data. Education level was coded as 3 categories: less than high school education, high school graduate, and postsecondary education. Family income was divided into 4 categories: less than \$10 thousand, \$10 to \$25 thousand, \$25 to \$50 thousand, and greater than \$50 thousand^[These respectively are class 1, class 2, class 3, and class 4].
+
+```{r table1}
+  format_num_pct <- function(x, val = 1){
+      paste0(scales::comma(sum(x==val))," (",c(scales::percent(mean(x==val))), ")")
+  }
+  format_mean_se <- function(x, val = 1){
+      paste0(scales::comma(round(mean(x), 2))," (",c(round(sd(x), 2)), ")")
+    }
+  
+  table1 <- df2 %>% 
+    group_by(`Paid Work` = any_work) %>% 
+    summarise(
+      `Number of Participants` = scales::comma(n()),
+      `White race` = format_num_pct(race),
+      `Rate of Incident Dementia` = format_num_pct(dementia),
+      `Mean (se) Onset Year of Dementia` = format_mean_se(dem_year[dementia==1])
+    ) 
+  table1$`Paid Work` <- c("No", "Yes")
+  table1 <- data.table::transpose(table1, keep.names = "Paid Work")
+  colnames(table1) <- NULL
+  knitr::kable(table1, caption=paste0("Participant Characteristics (n=", scales::comma(nrow(df2)), ")"))
+```
+
+```{r table2}
+
+format_binary <- function(x, c1){
+  levels(x) <- c(0, 1)
+  paste0(c1, ": ", sum(x == 1), " (",scales::percent(mean(x == 1)), ")")
+}
+
+educ <- summary(df2$educ)
+names(educ) <- c("No HS:", "HS:", "Post HS:")
+faminc <- summary(df2$faminc)
+names(faminc) <- c("Cat. 1:", "Cat. 2:", "Cat. 3:", "Cat. 4:")
+
+table2 <- data.frame(
+  "Variable Name" = c("Year 1 Age", "Study Site", "Gender", "APOE Type 4", "Education Level", "Family Income Level"),
+  "Variable Type" = c("Continuous", "Binary", "Binary", "Binary", "Categorical", "Categorical"),
+  "Summary" = c(
+    format_mean_se(df2$cv1age), 
+    format_binary(df2$site, c1="Site 2"),
+    format_binary(df2$gender, c1="Female"),
+    format_binary(df2$apo4, c1="Type 4"),
+    paste(paste(names(educ), educ), collapse = ", "), 
+    paste(paste(names(faminc), faminc), collapse = ", ")
+    ),
+  check.names = F
+)
+
+knitr::kable(table2, caption=paste0("Other Predictor Variables (n=", scales::comma(nrow(df2)), ")"))
+```
+
+### Statistical Modeling
+
+The model used is a Cox Proportional Hazards model, a type of statistical survival analysis. The goal of the model is to estimate how the predictor variables affect the rate of onset of dementia. The model estimates a hazard ratio for each predictor. If this ratio is greater than 1, then this predictor is associated with an increased rate in the onset of dementia. If the ratio is less than 1, there is an associated decrease in the rate of onset of dementia. THe model assumes that hazards are consistent in time, which as discussed above was likely violated in this case.
+
+# Appendix I: Technical Methods 
+
+## Data and Processing
+
+The data structure was very complicated. The data containing 3Ms score and work status were stored in SAS files in years 1 though 11. Each year had many different data sets associated with it, and different variables were observed in different years. In year 1, many of the patient characteristics were recorded. Additionally, the genetics study was from a different data source. The files were in a SAS format and required the `haven` R package to load and process. Iterative procedures were used that looped through the various years and searched for required variables using pattern matching.
+
+### Response Variable Construction
+
+The response variable are a binary diagnosis of dementia and the associated year of onset. This response variable had to be constructed using hospital visits, medical records, and score on the 3Ms test. In years 1, 3, 5, 8, 10, and 11, participant medication prescriptions were recorded. This list of medications was searched for prefixes associated with dementia medications, including: "donep", "arciept", "gelanta", "razadyne", "rivastig", "exelon", "excelon", "mema", "namenda", and "namaenda". 
+
+### Paid Work Variable Construction
+
+The number of hour worked was too sparse to be used. The paid work status of a participant typically changed over time, and there were missing observations in various years. For these reasons, a binary variable indicating whether an individual worked for pay at all over the 11 year time period was constructed. If an observation was missing in a given year, it is assumed that they did not work for pay. This methodology would only mislabel individuals who did not work for pay in any of the years observed, but did work for pay in the year with missing data, which is presumed to be a negligible or nonexistent proportion of the participants. In the different years of the study, this variable had different names and was located in different data sets. Therefore, pattern matching with `regex` was required. The pattern "curj" was searched for in the various yearly sub-directories.
+
+### Other Predictor Variables
+
+The other predictor variables were all recorded in year 1 of the study and considered fixed in time. Age at year 1 of the study was the only continuous predictor. Both race and gender were coded as binary variables in the data. Education level was coded as 3 categories: less than high school education, high school graduate, and postsecondary education. Family income was divided into 4 categories: less than \$10 thousand, \$10 to \$25 thousand, \$25 to \$50 thousand, and greater than \$50 thousand. APOE allele type e4 is the variant associated with the increase risk of dementia. The genetic study broke down 6 categories based off allele type frequency, so this variable was converted into a binary indicator of whether the allele type contained e4 (which corresponds to classes 5 and 6 in the data). Missing observations included 166 missing values for APOE and 374 missing observations of family income level. These participants were fully removed from the analysis, resulting in 522 participants being removed due to missing data (as there was some overlap in these numbers). A critical challenge of this study was that variables were encoded with different names and stored across different data sets. Pattern matching on the variable suffixes was necessary to construct the data. 
+
+## Statistical Modeling
+
+### Cox PH Model
+
+The Cox PH model was fit using the `survival` package in R. The main assumption of the model is that hazards are proportional. This means that the ratio of the hazards is constant in time for any two individuals. This assumption can be assessed with “Kaplan-Meier” curves. The curves should have consistent shapes in time, rather than crossing or leveling out in inconsistent ways. Significance tests, which examine the proportional hazards assumption, will also be applied. Additionally, there is an assumed linear relationship between the log hazard and the predictor variables. The linearity assumption will be tested on the continuous variables using “Martingale residuals”. 
+
+The set of predictor variables used was developed apriori based on the scientific literature. A model with race and paid work as fixed effects was compared to a model with an interaction term between the two predictors using a log-likelihood ratio test. The model with the interaction term resulted in a statistically significant increase in the log-likelihood (p-value of 0.041). 
+
+### Mathematical Specifications
+
+The Cox PH model fits a *hazard function* to the data. This is a function of time which corresponds to the risk of an event (in this case, a diagnosis of dementia) at a given time (in this case, the unit is years). The model specification with the given predictor variables is:
+$$
+h(t) = h_0(t) \cdot \exp(
+\beta_1\cdot\text{age} + \beta_2\cdot\text{site} + \\ \beta_3\cdot\text{gender}+\beta_4\cdot(ApoE4)+\\
+\beta_5\cdot\text{education}+\beta_6\cdot\text{income}+\\
+\beta_7\cdot\text{race}+\beta_8\cdot\text{work}+\\
+\beta_9\cdot\text{race}\times\text{work})
+$$
+
+Definitions:
+
+* $t$: time in years.
+* $h_0(t)$: baseline hazard, or the hazard if all categorical predictors are at the reference level and continuous variables are at the mean.
+* $\beta_1, \beta_2, ...$: model coefficients
+* $\text{race}\times\text{work}$: interaction effect between race and paid work status.
+
+The *hazard ratios* are defined as: $\exp(\beta_i)$. A value greater than 1 corresponds to an increased risk of dementia, and a value less than 1 corresponds to a decreased risk of dementia. These are estimated by holding all predictor variables constant except for the $i$th predictor variable. The ratio of the hazard functions with the change in the predictor variable of interest gives us the estimate for the hazard ratio.
+
+
+
+### Simplifying Assumptions
+
+Due to the complexity of the data and the project, competing risk of other diseases and attrition due to death are not considered at this stage. If a participant died for any reason over the course of the study before receiving a dementia diagnosis, they were considered to not have gotten dementia.
+
+### Model Diagnostics
+
+For the proportional hazards assumption, a statistical significance test based on the classic chi-squared test of residuals is presented below. Plots are presented below that investigate the same assumption.
+
+```{r}
+xx <- as.data.frame(cox.zph(model2)$table)
+names(xx) <- c("Test Stat.", "D.O.F.", "P-Value")
+knitr::kable(xx, caption = "Chi-Square Test assessing Proportional Hazards")
+```
+![Proportional Hazards Assumption Plots](D:/Projects/Consulting Project 2022 - Demensia/Report/Images/PH_Plot.png)
+
+
+For the linearity assumption of the Cox PH model to hold, a plot of the Martingale residuals should be approximately linear. As can be seen in Figure XX below, this assumption is likely violated. 
+
+![Residuals Plot-Linearity Assumption](D:/Projects/Consulting Project 2022 - Demensia/Report/Images/Residuals_Plot.png)
+
+
+## Code
+
+All coding was done in R using the packages survival, survminer, dplyr, ggplot2. For the full code, visit the Github page: [https://github.com/jh-206/](https://github.com/jh-206/"repo name")
+
+
+
+## References
+
+1. *Modified Mini-Mental State Examination*, Encyclopedia of Clinical Neuropsychology: https://link.springer.com/referenceworkentry/10.1007/978-0-387-79948-3_530#:~:text=The%20Modified%20Mini%2DMental%20State,and%20some%20other%20minor%20changes.
+
+2. *Effect of socioeconomic disparities on incidence of
+dementia among biracial older adults: prospective
+study*, Yaffe 2013.
+
+3. *Cox Proportional Hazards Model*, STHDA:http://www.sthda.com/english/wiki/cox-proportional-hazards-model

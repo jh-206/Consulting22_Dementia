@@ -1,0 +1,128 @@
+---
+title: "Health ABC Demo"
+author: "Wassim Tarraf"
+date: "11/3/2021"
+output: html_document
+---
+
+# Upload packages
+```{r setup, message=FALSE}
+library(tidyverse)
+library(haven)
+library(dplyr)
+library(labelled)
+library(ggplot2)
+library(magrittr)
+```
+
+
+# Read and merge the data from wave 1
+```{r, message=FALSE, warning=FALSE}
+# Read the data
+### Note: The following (lines 24-63) can be made more efficient by running through a loop
+## list the names
+## Change the path to correspond with local
+setwd("/Users/wassim/Dropbox/MCCFAD Statistics Team work with R Rooks/Health ABC data 10.15.2021/")
+temp1 = list.files(path="Year 1",pattern="*.sas7bdat")
+temp10 = list.files(path="Year 10",pattern="*.sas7bdat")
+temp3 = list.files(path = "Year 3",pattern = "*.sas7bdat")
+temp5 = list.files(path="Year 5",pattern="*.sas7bdat")
+temp7 = list.files(path = "Year 7",pattern = "*.sas7bdat")
+temp8 = list.files(path="Year 8",pattern="*.sas7bdat")
+temp9 = list.files(path="Year 9",pattern="*.sas7bdat")
+temp11 = list.files(path="Year 11",pattern="*.sas7bdat")
+temp12 = list.files(path="Year 12",pattern="*.sas7bdat")
+temp13 = list.files(path="Year 13",pattern="*.sas7bdat")
+tempoutcm = list.files(path="Outcomes",pattern="*.sas7bdat")
+tempsubstdy = list.files(path="Substudies",pattern="*.sas7bdat")
+
+# Read the data files from SAS into R
+setwd("Year 1")
+list2env(lapply(setNames(temp1, make.names(gsub("*.sas7bdat$","", temp1))), read_sas), envir = .GlobalEnv)
+setwd("../Year 10")
+list2env(lapply(setNames(temp10, make.names(gsub("*.sas7bdat$","", temp10))), read_sas), envir = .GlobalEnv)
+setwd("../Year 3")
+list2env(lapply(setNames(temp3, make.names(gsub("*.sas7bdat$","", temp3))), read_sas), envir = .GlobalEnv)
+setwd("../Year 5")
+list2env(lapply(setNames(temp5, make.names(gsub("*.sas7bdat$","", temp5))), read_sas), envir = .GlobalEnv)
+setwd("../Year 7")
+list2env(lapply(setNames(temp7, make.names(gsub("*.sas7bdat$","", temp7))), read_sas), envir = .GlobalEnv)
+setwd("../Year 8")
+list2env(lapply(setNames(temp8, make.names(gsub("*.sas7bdat$","", temp8))), read_sas), envir = .GlobalEnv)
+setwd("../Year 9")
+list2env(lapply(setNames(temp9, make.names(gsub("*.sas7bdat$","", temp9))), read_sas), envir = .GlobalEnv)
+setwd("../Year 11")
+list2env(lapply(setNames(temp11, make.names(gsub("*.sas7bdat$","", temp11))), read_sas), envir = .GlobalEnv)
+setwd("../Year 12")
+list2env(lapply(setNames(temp12, make.names(gsub("*.sas7bdat$","", temp12))), read_sas), envir = .GlobalEnv)
+setwd("../Year 13")
+list2env(lapply(setNames(temp13, make.names(gsub("*.sas7bdat$","", temp13))), read_sas), envir = .GlobalEnv)
+setwd("../Outcomes")
+list2env(lapply(setNames(tempoutcm, make.names(gsub("*.sas7bdat$","", tempoutcm))), read_sas), envir = .GlobalEnv)
+setwd("../Substudies")
+list2env(lapply(setNames(tempsubstdy, make.names(gsub("*.sas7bdat$","", tempsubstdy))), read_sas), envir = .GlobalEnv)
+
+
+# Merge the data
+## Merge the data for year 1
+y1_ds <- left_join(ph, previncdz, by="HABCID") %>%
+  left_join(., y1calc, by="HABCID") %>% 
+  left_join(., y1clnvis, by="HABCID") %>% 
+  left_join(., y1rxcalc, by="HABCID") %>%
+  left_join(., sixmovis, by="HABCID") %>%
+  left_join(., y1mif, by="HABCID") %>%
+  left_join(., y1mifcod, by="HABCID") %>%
+  left_join(., y1read, by="HABCID") %>%
+  left_join(., y1screen, by="HABCID")
+
+## Merge the data for year 3
+y3_ds <- left_join(dxrean13, sa30mo, by="HABCID") %>% 
+  left_join(., sa30prox, by="HABCID") %>% 
+  left_join(., y3calc, by="HABCID") %>%
+  left_join(., y3clnvis, by="HABCID") %>%
+  left_join(., y3corehv, by="HABCID") %>%
+  left_join(., y3mif, by="HABCID") %>%
+  left_join(., y3mifcod, by="HABCID") %>%
+  left_join(., y3proxy, by="HABCID") %>% 
+  left_join(., y3read, by="HABCID") %>%
+  left_join(., y3rxcalc, by="HABCID")
+
+## Merge the data for year 5
+y5_ds <- left_join(dxrean15, sa54mo, by="HABCID") %>% 
+  left_join(., sa54prox, by="HABCID") %>% 
+  left_join(., y5calc, by="HABCID") %>%
+  left_join(., y5clnvis, by="HABCID") %>%
+  left_join(., y5corehv, by="HABCID") %>%
+  left_join(., y5mif, by="HABCID") %>%
+  left_join(., y5mifcod, by="HABCID") %>%
+  left_join(., y5proxy, by="HABCID") %>% 
+  left_join(., y5read, by="HABCID") %>%
+  left_join(., y5rxcalc, by="HABCID")
+
+# Wrangle data
+## Change variable names to lower
+## The code below loops over years 1, 3 and 5 of the data sets merged/created in lines 68-100
+for (i in c(1,3,5)){
+eval(parse(text=paste0('y',1,'_ds <- names(y',1,'_ds) %>% tolower'))) 
+}
+
+```
+
+# Plot age against MMSE by gender and volunteer Work status
+## Linear
+```{r, message=FALSE, warning=FALSE}
+y1_ds %>% filter(FPVWCURV<2) %>%  ggplot() +
+ geom_point(aes(x=CV1AGE, y=MMMSCORE)) +
+  geom_smooth(aes(x=CV1AGE, y=MMMSCORE, group=GENDER, colour=factor(GENDER)), method="lm") +
+  facet_wrap(~ factor(FPVWCURV)) +
+  theme_bw()
+```
+
+## Local smoother
+```{r, message=FALSE, warning=FALSE}
+y1_ds %>% filter(FPVWCURV<2) %>%  ggplot() +
+ geom_point(aes(x=CV1AGE, y=MMMSCORE)) +
+  geom_smooth(aes(x=CV1AGE, y=MMMSCORE, group=GENDER, colour=factor(GENDER)), method="loess") +
+  facet_wrap(~ factor(FPVWCURV)) +
+  theme_bw()
+```

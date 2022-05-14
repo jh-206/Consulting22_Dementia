@@ -1,0 +1,388 @@
+---
+title: "Health ABC Demo"
+author: "Wassim Tarraf"
+date: "11/3/2021"
+output:
+  word_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+# Upload packages
+```{r setup, message=FALSE}
+library(tidyverse)
+library(haven)
+library(dplyr)
+library(tidyr)
+library(labelled)
+library(ggplot2)
+library(magrittr)
+library(naniar)
+library(jstable)
+library(summarytools)
+library(tableone)
+```
+
+
+# Read and merge the data from wave 1
+```{r, message=FALSE, warning=FALSE, results='hide'}
+# Read the data
+### Note: The following (lines 24-63) can be made more efficient by running through a loop
+## list the names
+## Change the path to correspond with local
+# setwd("/Users/rrooks/Dropbox/MCCFAD Statistics Team work with R Rooks/Health ABC data 10.15.2021/")
+###
+base_path <- Sys.getenv("USERPROFILE")
+data_path <- file.path(base_path, "/The University of Colorado Denver/Rooks, Ronica - Health ABC data 10.15.2021/")
+setwd(data_path)
+###
+temp1 = list.files(path="Year 1",pattern="*.sas7bdat")
+temp10 = list.files(path="Year 10",pattern="*.sas7bdat")
+temp3 = list.files(path = "Year 3",pattern = "*.sas7bdat")
+temp5 = list.files(path="Year 5",pattern="*.sas7bdat")
+temp7 = list.files(path = "Year 7",pattern = "*.sas7bdat")
+temp8 = list.files(path="Year 8",pattern="*.sas7bdat")
+temp9 = list.files(path="Year 9",pattern="*.sas7bdat")
+temp11 = list.files(path="Year 11",pattern="*.sas7bdat")
+temp12 = list.files(path="Year 12",pattern="*.sas7bdat")
+temp13 = list.files(path="Year 13",pattern="*.sas7bdat")
+temp16 = list.files(path="Year 16",pattern="*.sas7bdat")
+tempoutcm = list.files(path="Outcomes",pattern="*.sas7bdat")
+tempsubstdy = list.files(path="Substudies",pattern="*.sas7bdat")
+tempgenetics= list.files(path="Genetics",pattern="*.sas7bdat")
+# tempinc = list.files(path="Health ABC SAS Incident Dementia code",pattern="*.sas7bdat")
+tempinc = list.files("D:/Projects/Consulting Project 2022 - Demensia/Client Code", pattern = "*.sas7bdat")
+
+ 
+# Read the data files from SAS into R
+setwd("Year 1")
+list2env(lapply(setNames(temp1[-which(temp1 == "one.sas7bdat")], make.names(gsub("*.sas7bdat$","", temp1[-which(temp1 == "one.sas7bdat")]))), read_sas), envir = .GlobalEnv)
+setwd("../Year 10")
+list2env(lapply(setNames(temp10, make.names(gsub("*.sas7bdat$","", temp10))), read_sas), envir = .GlobalEnv)
+setwd("../Year 3")
+list2env(lapply(setNames(temp3, make.names(gsub("*.sas7bdat$","", temp3))), read_sas), envir = .GlobalEnv)
+setwd("../Year 5")
+list2env(lapply(setNames(temp5, make.names(gsub("*.sas7bdat$","", temp5))), read_sas), envir = .GlobalEnv)
+setwd("../Year 7")
+list2env(lapply(setNames(temp7, make.names(gsub("*.sas7bdat$","", temp7))), read_sas), envir = .GlobalEnv)
+setwd("../Year 8")
+list2env(lapply(setNames(temp8, make.names(gsub("*.sas7bdat$","", temp8))), read_sas), envir = .GlobalEnv)
+setwd("../Year 9")
+list2env(lapply(setNames(temp9, make.names(gsub("*.sas7bdat$","", temp9))), read_sas), envir = .GlobalEnv)
+setwd("../Year 11")
+list2env(lapply(setNames(temp11, make.names(gsub("*.sas7bdat$","", temp11))), read_sas), envir = .GlobalEnv)
+setwd("../Year 12")
+list2env(lapply(setNames(temp12, make.names(gsub("*.sas7bdat$","", temp12))), read_sas), envir = .GlobalEnv)
+setwd("../Year 13")
+list2env(lapply(setNames(temp13, make.names(gsub("*.sas7bdat$","", temp13))), read_sas), envir = .GlobalEnv)
+setwd("../Year 16")
+list2env(lapply(setNames(temp16, make.names(gsub("*.sas7bdat$","", temp16))), read_sas), envir = .GlobalEnv)
+setwd("../Outcomes")
+list2env(lapply(setNames(tempoutcm, make.names(gsub("*.sas7bdat$","", tempoutcm))), read_sas), envir = .GlobalEnv)
+setwd("../Substudies")
+list2env(lapply(setNames(tempsubstdy, make.names(gsub("*.sas7bdat$","", tempsubstdy))), read_sas), envir = .GlobalEnv)
+setwd("../Genetics")
+list2env(lapply(setNames(tempgenetics, make.names(gsub("*.sas7bdat$","", tempgenetics))), read_sas), envir = .GlobalEnv)
+# setwd("../Health ABC SAS Incident Dementia code")
+setwd("D:/Projects/Consulting Project 2022 - Demensia/Client Code")
+list2env(lapply(setNames(tempinc, make.names(gsub("*.sas7bdat$","", tempinc))), read_sas), envir = .GlobalEnv)
+
+
+
+# Merge the data
+## Merge the data for year 1
+y1_ds <- left_join(ph, previncdz, by="HABCID") %>%
+  left_join(., y1calc, by="HABCID") %>% 
+  left_join(., y1clnvis, by="HABCID") %>%
+  left_join(., y1mif, by="HABCID") %>%
+  left_join(., y1mifcod, by="HABCID") %>%
+  left_join(., y1rxcalc, by="HABCID") %>%
+  left_join(., sixmovis, by="HABCID") %>%
+  left_join(., y1read, by="HABCID") %>%
+  left_join(., y1screen, by="HABCID") %>%
+  left_join(., dna, by="HABCID") %>%
+#below line includes DVs, IVs  
+  select("HABCID", "MMMSCORE", "MMMFLAG", "DSS", "P4NC", "P4NI", "P4TST", "FPVWCURJ", "FPVWAHWR", "FPVWMOW", "FPVWCURV", "FPVWAHVW", 'FPVWMOV',
+#below line includes CVs, APOEHAP for Apolipoprotein-e4 from Genetics folder and DNA sas file
+  "RACE", "GENDER", "CV1AGE", "SITE", "HQSSOPIH", "EDUC", "FAMINC", "BMI", "MADATE", "Y1WTK",
+  "BQDA12MO", "BQSCCGNO", "BQSCSNOW", "FPAC12MO", "FPHI12MO", "FPMI12MO",
+  "HQSSRCLO", "HQSSFCLO", "APOEHAP")
+#below line includes all variables to create count of chronic conditions
+#  "Y1PCHD1", "Y1PCHD2", "Y1PCHD3", "Y1PCHF", "Y1PPAD", "Y1PDEPR1", "Y1PDIAB1", 
+#  "Y1PGALLS", "Y1PHERNI", "Y1PGIBLD", "Y1PULCER", "Y1PHBP1", "Y1POAHIP", "Y1POAHND", "Y1POAKN",
+#  "Y1POAOTH", "Y1POSTP1", "Y1PPROST", "Y1PPULCD")
+
+# Combine with the dementia incidence data set using Health ABC data up to/incl year 11
+y1plus <- left_join(y1_ds, habc_dementia, by="HABCID")
+
+#this code from Wassim allows me to type variable names in lowercase
+#bc R is case sensitive otherwise
+names(y1plus) <- names(y1plus) %>% tolower
+
+# Examine the generated data
+head(y1plus)
+table(y1plus$apoehap, y1plus$dementia) #produces a cross-tab bw apoehap(row) and dementia any time (column)
+table(y1plus$faminc, exclude=NULL)
+#1= less than 10K
+#2=10K to 25K
+#3=> 25K up to
+#<50K
+#4=≥ 50K
+#5 - I want to recode the "no answer" to this category to prevent loss of 374 people in the sample
+y1plus$faminc2 <- y1plus$faminc
+y1plus$faminc2[is.na(y1plus$faminc2)] <- 5 # add level 5 to the factor for the NA-no answer
+table(y1plus$faminc2, exclude=NULL)
+
+table(y1plus$site, exclude=NULL)
+```
+
+# Variable management
+```{r}
+# Make changes to data set
+# Recode the work and volunteer variables so that 7,8 are replaced with missing to focus on 0=No, 1=Yes
+
+y1plus <- y1plus %>% mutate(r_fpvwcurj=fpvwcurj, r_fpvwcurv=fpvwcurv) %>% 
+  replace_with_na(replace = list(r_fpvwcurj = c(7),
+                             r_fpvwcurv = c(7, 8)))
+  
+  
+
+# Variables of interest
+vars <- c("dementia", "r_fpvwcurj","r_fpvwcurv", "race", "gender", "cv1age", "educ", "faminc2", "site", "apoehap")
+covars <- c("r_fpvwcurj","r_fpvwcurv", "race", "gender", "cv1age", "educ", "faminc2", "site", "apoehap")
+catvars <- c("r_fpvwcurj","r_fpvwcurv", "race", "gender", "educ", "faminc2", "site", "apoehap")
+  
+# Examine missing patterns
+gg_miss_var(y1plus %>% select(vars)) + theme_bw() 
+gg_miss_upset(y1plus %>% select(vars))
+
+# Generate a descriptive Table
+# Overall descriptives
+print(dfSummary(y1plus %>% select(vars), plain.ascii = FALSE, style = "grid", 
+                 graph.magnif = 0.6, valid.col = FALSE),  method = 'render')
+
+# Descriptives by dementia status
+CreateTableOne(vars = covars, strata = c("dementia"), data = y1plus,
+                            factorVars = catvars)
+```
+
+# Split data by gender
+```{r}
+# Generate male and female 
+y1plus_m <- y1plus %>% filter(gender==1)
+y1plus_f <- y1plus %>% filter(gender==2)
+```
+
+
+# Modeling Total combined males and females
+```{r}
+# Fit a series of logistic regression models: Work
+
+dem.m1.work <- glm(dementia ~ factor(r_fpvwcurj), data = y1plus, family = binomial)
+dem.m2.work <- glm(dementia ~ factor(r_fpvwcurj) + factor(race) + factor(gender) + cv1age + factor(educ) + factor(site) + factor(faminc2), data = y1plus, family = binomial)
+dem.m3.work <- glm(dementia ~ factor(r_fpvwcurj) + factor(race) + factor(gender) + cv1age + factor(educ) +  factor(site) + factor(faminc2) + factor(apoehap), data = y1plus, family = binomial)
+
+# Examine Summaries of Models
+summary(dem.m1.work)
+summary(dem.m2.work)
+summary(dem.m3.work)
+
+
+# Combine the data frames to plot the ORs and CIs
+rbind(m1.work, m2.work, m3.work) %>% filter(estimate=="factor(r_fpvwcurj)1") %>% 
+  ggplot(aes(x=factor(model, levels=c("m1.work", "m2.work", "m3.work"), labels=c("M1", "M2", "M3")))) +
+  geo# You can add several post-hoc steps here (I only include the plots of estimates)
+
+# Collect ORs, 95% CIs, and p-values in data frames
+# Model 1
+m1.work <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m1.work), confint(dem.m1.work))), digits=2),round(coef(summary(dem.m1.work))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m1.work") %>%  add_rownames(., var = "estimate")
+# Model 2
+m2.work <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m2.work), confint(dem.m2.work))), digits=2),round(coef(summary(dem.m2.work))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m2.work") %>%  add_rownames(., var = "estimate")
+# Model 3
+m3.work <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m3.work), confint(dem.m3.work))), digits=2),round(coef(summary(dem.m3.work))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m3.work") %>%  add_rownames(., var = "estimate")
+
+
+# Combine the data frames to plot the ORs and CIs
+rbind(m1.work, m2.work, m3.work) %>% filter(estimate=="factor(r_fpvwcurj)1") %>% 
+  ggplot(aes(x=factor(model, levels=c("m1.work", "m2.work", "m3.work"), labels=c("M1", "M2", "M3")))) +
+  geom_point(aes(y=OR), shape=21, size=2) +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=0.2) +
+  geom_hline(yintercept=1, color="maroon", linetype = "dashed") +
+  theme_bw() + 
+  labs(x="Model", y="OR: Baseline Working") +
+  ylim(0,2)
+
+
+# Fit a series of logistic regression models: Volunteer
+dem.m1.volun <- glm(dementia ~ factor(r_fpvwcurv) , data = y1plus, family = binomial)
+dem.m2.volun <- glm(dementia ~ factor(r_fpvwcurv) + factor(race) + factor(gender) + cv1age + factor(educ) + factor(site) + factor(faminc2), data = y1plus, family = binomial)
+dem.m3.volun <- glm(dementia ~ factor(r_fpvwcurv) + factor(race) + factor(gender) + cv1age + factor(educ) + factor(site) + factor(faminc2) + factor(apoehap), data = y1plus, family = binomial)
+
+# Examine Summaries of Models
+summary(dem.m1.volun)
+summary(dem.m2.volun)
+summary(dem.m3.volun)
+
+# You can add several post-hoc steps here (I only include the plots of estimates)
+
+# Collect ORs, 95% CIs, and p-values in data frames
+# Model 1
+m1.volun <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m1.volun), confint(dem.m1.volun))), digits=2),round(coef(summary(dem.m1.volun))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m1.volun") %>%  add_rownames(., var = "estimate")
+# Model 2
+m2.volun <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m2.volun), confint(dem.m2.volun))), digits=2),round(coef(summary(dem.m2.volun))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m2.volun") %>%  add_rownames(., var = "estimate")
+# Model 3
+m3.volun <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m3.volun), confint(dem.m3.volun))), digits=2),round(coef(summary(dem.m3.volun))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m3.volun") %>%  add_rownames(., var = "estimate")
+
+# Combine the data frames to plot the ORs and CIs
+rbind(m1.volun, m2.volun, m3.volun) %>% filter(estimate=="factor(r_fpvwcurv)1") %>% 
+  ggplot(aes(x=factor(model, levels=c("m1.volun", "m2.volun", "m3.volun"), labels=c("M1", "M2", "M3")))) +
+  geom_point(aes(y=OR), shape=21, size=2) +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=0.2) +
+  geom_hline(yintercept=1, color="maroon", linetype = "dashed") +
+  theme_bw() + 
+  labs(x="Model", y="OR: Baseline Volunteering") +
+  ylim(0,2)
+```
+
+# Male analyses for working and incident dementia (at anytime in the Health ABC data)
+```{r}
+# Fit a series of logistic regression models for men: Work
+
+dem.m1.work.m <- glm(dementia ~ factor(r_fpvwcurj) , data = y1plus %>% filter(gender==1), family = binomial)
+dem.m2.work.m <- glm(dementia ~ factor(r_fpvwcurj) + factor(race)  + cv1age + factor(educ) +  factor(site) + factor(faminc2), data = y1plus %>% filter(gender==1), family = binomial)
+dem.m3.work.m <- glm(dementia ~ factor(r_fpvwcurj) + factor(race)  + cv1age + factor(educ) + factor(site) + factor(faminc2) + factor(apoehap), data = y1plus %>% filter(gender==1), family = binomial)
+
+# Examine Summaries of Models
+summary(dem.m1.work.m)
+summary(dem.m2.work.m)
+summary(dem.m3.work.m)
+
+# You can add several post-hoc steps here (I only include the plots of estimates)
+
+# Collect ORs, 95% CIs, and p-values in data frames
+# Model 1
+m1.work.m <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m1.work.m), confint(dem.m1.work.m))), digits=2),round(coef(summary(dem.m1.work.m))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m1.work.m") %>%  add_rownames(., var = "estimate")
+# Model 2
+m2.work.m <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m2.work.m), confint(dem.m2.work.m))), digits=2),round(coef(summary(dem.m2.work.m))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m2.work.m") %>%  add_rownames(., var = "estimate")
+# Model 3
+m3.work.m <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m3.work.m), confint(dem.m3.work.m))), digits=2),round(coef(summary(dem.m3.work.m))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m3.work.m") %>%  add_rownames(., var = "estimate")
+
+# Combine the data frames to plot the ORs and CIs
+g.work.m <- rbind(m1.work.m, m2.work.m, m3.work.m) %>% filter(estimate=="factor(r_fpvwcurj)1") %>% 
+  ggplot(aes(x=factor(model, levels=c("m1.work.m", "m2.work.m", "m3.work.m"), labels=c("M1", "M2", "M3")))) +
+  geom_point(aes(y=OR), shape=21, size=2) +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=0.2) +
+  geom_hline(yintercept=1, color="maroon", linetype = "dashed") +
+  theme_bw() + 
+  labs(x="Model", y="OR: Baseline Working") +
+  ylim(0,2) + ggtitle("Males")
+
+
+
+# Female analyses for working and incident dementia (at anytime in the Health ABC data)
+```{r}
+# Fit a series of logistic regression models for women: Work
+
+dem.m1.work.f <- glm(dementia ~ factor(r_fpvwcurj), data = y1plus_f, family = binomial)
+dem.m2.work.f <- glm(dementia ~ factor(r_fpvwcurj) + factor(race) + cv1age + factor(educ) + factor(site) + factor(faminc2), data = y1plus_f, family = binomial)
+dem.m3.work.f <- glm(dementia ~ factor(r_fpvwcurj) + factor(race) + cv1age + factor(educ) + factor(site) + factor(faminc2) + factor(apoehap), data = y1plus_f, family = binomial)
+
+# Examine Summaries of Models
+summary(dem.m1.work.f)
+summary(dem.m2.work.f)
+summary(dem.m3.work.f)
+
+# You can add several post-hoc steps here (I only include the plots of estimates)
+
+# Collect ORs, 95% CIs, and p-values in data frames
+# Model 1
+m1.work.f <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m1.work.f), confint(dem.m1.work.f))), digits=2),round(coef(summary(dem.m1.work.f))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m1.work.f") %>%  add_rownames(., var = "estimate")
+# Model 2
+m2.work.f <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m2.work.f), confint(dem.m2.work.f))), digits=2),round(coef(summary(dem.m2.work.f))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m2.work.f") %>%  add_rownames(., var = "estimate")
+# Model 3
+m3.work.f <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m3.work.f), confint(dem.m3.work.f))), digits=2),round(coef(summary(dem.m3.work.f))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m3.work.f") %>%  add_rownames(., var = "estimate")
+
+# Combine the data frames to plot the ORs and CIs
+g.work.f <- rbind(m1.work.f, m2.work.f, m3.work.f) %>% filter(estimate=="factor(r_fpvwcurj)1") %>% 
+  ggplot(aes(x=factor(model, levels=c("m1.work.f", "m2.work.f", "m3.work.f"), labels=c("M1", "M2", "M3")))) +
+  geom_point(aes(y=OR), shape=21, size=2) +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=0.2) +
+  geom_hline(yintercept=1, color="maroon", linetype = "dashed") +
+  theme_bw() + 
+  labs(x="Model", y="OR: Baseline Working") +
+  ylim(0,2) + ggtitle("Females")
+
+
+
+# Fit a series of logistic regression models: Volunteer for men
+dem.m1.volun.m <- glm(dementia ~ factor(r_fpvwcurv), data = y1plus %>% filter(gender==1), family = binomial)
+dem.m2.volun.m <- glm(dementia ~ factor(r_fpvwcurv) + factor(race)  + cv1age + factor(educ) + factor(site) + factor(faminc2), data = y1plus %>% filter(gender==1), family = binomial)
+dem.m3.volun.m <- glm(dementia ~ factor(r_fpvwcurv) + factor(race) + cv1age + factor(educ) + factor(site) + factor(faminc2) + factor(apoehap), data = y1plus %>% filter(gender==1), family = binomial)
+
+# Examine Summaries of Models
+summary(dem.m1.volun.m)
+summary(dem.m2.volun.m)
+summary(dem.m3.volun.m)
+
+# You can add several post-hoc steps here (I only include the plots of estimates)
+
+# Collect ORs, 95% CIs, and p-values in data frames
+# Model 1
+m1.volun.m <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m1.volun.m), confint(dem.m1.volun.m))), digits=2),round(coef(summary(dem.m1.volun.m))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m1.volun.m") %>%  add_rownames(., var = "estimate")
+# Model 2
+m2.volun.m <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m2.volun.m), confint(dem.m2.volun.m))), digits=2),round(coef(summary(dem.m2.volun.m))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m2.volun.m") %>%  add_rownames(., var = "estimate")
+# Model 3
+m3.volun.m <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m3.volun.m), confint(dem.m3.volun.m))), digits=2),round(coef(summary(dem.m3.volun.m))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m3.volun.m") %>%  add_rownames(., var = "estimate")
+
+# Combine the data frames to plot the ORs and CIs
+g.volun.m <- rbind(m1.volun.m, m2.volun.m, m3.volun.m) %>% filter(estimate=="factor(r_fpvwcurv)1") %>% 
+  ggplot(aes(x=factor(model, levels=c("m1.volun.m", "m2.volun.m", "m3.volun.m"), labels=c("M1", "M2", "M3")))) +
+  geom_point(aes(y=OR), shape=21, size=2) +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=0.2) +
+  geom_hline(yintercept=1, color="maroon", linetype = "dashed") +
+  theme_bw() + 
+  labs(x="Model", y="OR: Baseline Volunteering") +
+  ylim(0,2) + ggtitle("Males")
+```
+# Female analyses for volunteering
+```{r}
+
+# Fit a series of logistic regression models: Volunteering for women
+dem.m1.volun.f <- glm(dementia ~ factor(r_fpvwcurv) , data = y1plus_f, family = binomial)
+dem.m2.volun.f <- glm(dementia ~ factor(r_fpvwcurv) + factor(race) + cv1age + factor(educ) + factor(site) + factor(faminc2), data = y1plus_f, family = binomial)
+dem.m3.volun.f <- glm(dementia ~ factor(r_fpvwcurv) + factor(race) + cv1age + factor(educ) + factor(site) + factor(faminc2) + factor(apoehap), data = y1plus_f, family = binomial)
+
+# Examine Summaries of Models
+summary(dem.m1.volun.f)
+summary(dem.m2.volun.f)
+summary(dem.m3.volun.f)
+
+# You can add several post-hoc steps here (I only include the plots of estimates)
+
+# Collect ORs, 95% CIs, and p-values in data frames
+# Model 1
+m1.volun.f <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m1.volun.f), confint(dem.m1.volun.f))), digits=2),round(coef(summary(dem.m1.volun.f))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m1.volun.f") %>%  add_rownames(., var = "estimate")
+# Model 2
+m2.volun.f <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m2.volun.f), confint(dem.m2.volun.f))), digits=2),round(coef(summary(dem.m2.volun.f))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m2.volun.f") %>%  add_rownames(., var = "estimate")
+# Model 3
+m3.volun.f <- as.data.frame(cbind(round(exp(cbind(OR = coef(dem.m3.volun.f), confint(dem.m3.volun.f))), digits=2),round(coef(summary(dem.m3.volun.f))[,4], digits=4))) %>% rename(lci="2.5 %", uci="97.5 %", pval="V4") %>% mutate(model="m3.volun.f") %>%  add_rownames(., var = "estimate")
+
+# Combine the data frames to plot the ORs and CIs
+g.volun.f <- rbind(m1.volun.f, m2.volun.f, m3.volun.f) %>% filter(estimate=="factor(r_fpvwcurv)1") %>% 
+  ggplot(aes(x=factor(model, levels=c("m1.volun.f", "m2.volun.f", "m3.volun.f"), labels=c("M1", "M2", "M3")))) +
+  geom_point(aes(y=OR), shape=21, size=2) +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=0.2) +
+  geom_hline(yintercept=1, color="maroon", linetype = "dashed") +
+  theme_bw() + 
+  labs(x="Model", y="OR: Baseline Volunteering") +
+  ylim(0,2) + ggtitle("Females")
+
+
+# Combining work estimates for males and females
+ggpubr::ggarrange(g.work.m, g.work.f)
+
+# Combining volunteering estimates for males and females
+ggpubr::ggarrange(g.volun.m, g.volun.f)
+```
+
