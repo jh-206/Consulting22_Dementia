@@ -2,11 +2,13 @@
 title: "Work Status, Cognitive Function, and Dementia"
 author: "Jonathon Hirschi"
 date: "Statistical Consulting, Spring 2022"
-output: pdf_document
+output: 
+  pdf_document:
+    extra_dependencies: ["float"]
 ---
 
 ```{r setup, include=FALSE, message=F, warning=F}
-knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(echo = F, fig.pos = "!H", out.extra = "")
 library(dplyr); library(ggplot2); library(survival); library(survminer)
 data_path <- "C:/Projects/Consulting22_Dementia/Data"
 output_path <- "C:/Projects/Consulting22_Dementia/Outputs/"
@@ -39,15 +41,21 @@ The final model coefficients are presented below in Table XX. The exponentiated 
   knitr::kable(model_df, caption = "Final Model Coefficients")
 ```
 
-Predictors^[*Terminology Note: * The language "predictor" will be used, but other terms are used such as "covariate" or "independent variable".] with p-values less than 0.05 are considered to have relatively strong evidence that they had an effect on the rate of incident dementia. Working for pay was associated with a slightly decreased risk in dementia, but this effect was not significantly different from no effect. The 95% CI is very wide, indicating substantial variability in this effect. Race was significantly different from 1, and the interaction effect between race and paid work was also significant at the 0.05 level. In other words, given that an individual worked for pay, they were at a greater risk of developing dementia if they were white than if they were black.
+Predictors^[*Terminology Note: * The language "predictor" will be used, but other terms are used such as "covariate" or "independent variable".] with p-values less than 0.05 are considered to have relatively strong evidence that they had an effect on the rate of incident dementia^[When interpreting a variable effect size, all other predictors should be considered as held constant.]. Working for pay was associated with a slightly decreased risk in dementia, but this effect was not significantly different from no effect. The 95% CI is very wide, indicating substantial variability in this effect. Race was significantly different from 1^[The associated coefficient had a 95% CI of 0.71-0.97, with a mean estimate of 0.83]. The interaction effect between race and paid work was also significantly different from 1 at the 0.05 level^[The associated coefficient had a 95% CI of 1.01-1.67, with a mean estimate of 0.1.30]. In other words, given that an individual worked for pay, they were expected to be at 1.3 times greater risk of developing dementia if they were white than if they were black. 
 
-Women were at a higher risk of incident dementia than men^[The associated coefficient was 1-1.26], all other variables equal. The e4 variant of the APOE protein was associated with an increased risk. Participants that had either a high school education or postsecondary education were at a lower risk for developing incident dementia than participants with less than a high school education^[Coefficients ranged from 0.66-0.96 for post high school education, and from 0.73-1.10 for postsecondary], though the effect of postsecondary education was not significantly different from 1.
+Women were at a higher risk of incident dementia than men^[The associated coefficient had a 95% CI of 1-1.26, with a mean estimate of 1.12]. The e4 variant of the APOE protein was associated with an increased risk. Participants that had either a high school education or postsecondary education were at a lower risk for developing incident dementia than participants with less than a high school education^[The associated coefficient had a 95% CI of 0.66-0.96, with a mean estimate of 0.79 for post high school education, and from 0.73-1.10 for postsecondary, with a mean estimate of 0.88. For these two coefficients associated with education, the effect is relative to the category of less than a high school education.], though the effect of postsecondary education was not significantly different from 1. None of the variables associated with family income categories were significantly different from 1. The variable associated with study site was significantly different from 1^[The associated coefficient had a 95% CI of 0.75-0.0.93, with a mean estimate of 0.84.].
 
 ## Discussion
 
 Since the diagnostics of the Cox PH model were poor, all findings should considered cautiously and further research should focus on identifying and resolving these issues. One potential resolution would be to add time-varying predictors, or consider a different survival analysis model entirely that makes a less restrictive set of assumptions. Another potential area of research would be to review influential papers in the field that utilized Cox PH models, such as Yaffe 2013, to verify if the models similarly violated assumptions. 
 
-With the reservations about model diagnostics in mind, many of the effects observed in the model matched the theoretical expectations, including the effects of gender, the APOE protein, education, and race. While the effect of working for pay could not be distinguished from no effect, the interaction with race was statistically significant. Black participants who worked for pay were at a lower risk than their white counterparts. The treatment of paid work was coarse. Further research could examine whether the quantity of work is related to the rates of dementia. Attrition due to death was not accounted for in this study, and it could be accounted for in future work. Competing risk analysis could also be utilized to account for other health conditions.
+With the reservations about model diagnostics in mind, many of the effects observed in the model matched the theoretical expectations. The scientific literature suggests that women are at a higher risk of developing dementia, the APOE protein e4 variant is associated with an increased risk of dementia, higher education is associated with a protective effect against dementia, and black adults are at a higher risk of developing dementia. In the statistical model, all of these effects were statistically significant and had positive or negative associations that matches these theoretical expectations. It is rare that real world data perfectly satisfy statistical assumptions. Since the coefficients discussed above satisfy theoretical expectations, it is possible that the coefficient estimates for paid work may still yield useful results.
+
+While the effect of working for pay could not be distinguished from no effect, the interaction with race was statistically significant. Black participants who worked for pay were at a lower risk than their white counterparts. Future research would be needed to investigate whether this is due to black and white adults responding differently to paid work, or whether these differences reflect underlying differences in the type of work or the quantity of work. The confidence interval associated with the interaction effect ranged from 1.01 to 1.67, so at the low end white participants who worked for pay were 1.01 times more likely to develop dementia than black participants who worked for pay. A review of the dementia literature would be needed to determine whether these are clinically significant results.
+
+The treatment of paid work was coarse. The data could not be used to meaningfully distinguish between participants with years of full-time paid work versus participants that only worked part time for a short duration. Further research could examine whether the quantity of work or the type of work is related to the rates of dementia. Other engaging activity such as childcare, volunteer work, or other community involvement were not accounted for, and these lifestyles are also hypothesized to have similar protective effects from dementia as paid work. 
+
+Future analysis could build on this study with the same data and general modeling framework. Attrition due to death was not accounted for in this study, and it could be accounted for in future work. Competing risk analysis could also be utilized to account for other health conditions. Observational studies such as this cannot distinguish correlation from causality. 
 
 ## Methods
 
@@ -110,17 +118,17 @@ knitr::kable(table2, caption=paste0("Other Predictor Variables (n=", scales::com
 
 ### Statistical Modeling
 
-The model used is a Cox Proportional Hazards model, a type of statistical survival analysis. The goal of the model is to estimate how the predictor variables affect the rate of onset of dementia. The model estimates a hazard ratio for each predictor. If this ratio is greater than 1, then this predictor is associated with an increased rate in the onset of dementia. If the ratio is less than 1, there is an associated decrease in the rate of onset of dementia. THe model assumes that hazards are consistent in time, which as discussed above was likely violated in this case.
+The model used is a Cox Proportional Hazards model, a type of statistical survival analysis. The goal of the model is to estimate how the predictor variables affect the rate of onset of dementia. The model estimates a hazard ratio for each predictor. If this ratio is greater than 1, then this predictor is associated with an increased rate in the onset of dementia. If the ratio is less than 1, there is an associated decrease in the rate of onset of dementia.  The model assumes that hazards are consistent in time, which as discussed above was likely violated in this case.
 
 # Appendix I: Technical Methods 
 
 ## Data and Processing
 
-The data structure was very complicated. The data containing 3Ms score and work status were stored in SAS files in years 1 though 11. Each year had many different data sets associated with it, and different variables were observed in different years. In year 1, many of the patient characteristics were recorded. Additionally, the genetics study was from a different data source. The files were in a SAS format and required the `haven` R package to load and process. Iterative procedures were used that looped through the various years and searched for required variables using pattern matching.
+The data structure was very complicated. The data containing 3Ms score and work status were stored in SAS files in years 1 though 11. Each year had many different data sets associated with it, and different variables were observed in different years. In year 1, many of the patient characteristics were recorded. Additionally, the genetics study was from a different data source. The files were in a SAS format and required the `haven` R package to load and process. Iterative procedures were used to loop through the various years and search for required variables. The variable indicating whether an individual worked for pay had the suffix "curj" which was used for pattern matching.
 
 ### Response Variable Construction
 
-The response variable are a binary diagnosis of dementia and the associated year of onset. This response variable had to be constructed using hospital visits, medical records, and score on the 3Ms test. In years 1, 3, 5, 8, 10, and 11, participant medication prescriptions were recorded. This list of medications was searched for prefixes associated with dementia medications, including: "donep", "arciept", "gelanta", "razadyne", "rivastig", "exelon", "excelon", "mema", "namenda", and "namaenda". 
+The response variable are a binary diagnosis of dementia and the associated year of onset. This response variable had to be constructed using hospital visits, medical records, and score on the 3Ms test. In years 1, 3, 5, 8, 10, and 11, participant medication prescriptions were recorded in separate data files. This list of medications was searched for prefixes associated with dementia medications, including: "donep", "arciept", "gelanta", "razadyne", "rivastig", "exelon", "excelon", "mema", "namenda", and "namaenda". If any of these sequences were found using pattern matching, the year of the prescription was recorded as the year of dementia. The hospital record data had a separate variable for each study year indicating whether the participant was diagnosed with dementia in that year's hospital visit. The earliest year of the three different methods was used as the year of onset of dementia.
 
 ### Paid Work Variable Construction
 

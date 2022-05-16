@@ -59,13 +59,7 @@
 # Cox PH Models ------------------------------------------------------------
 
   
-  # Model with any work over 11 year period as predictor
-  # Baseline models
-  model_base <- coxph(Surv(time = dem_year, event = dementia) ~ any_work, 
-                      data = df2)
-  summary(model_base)
-  
-
+  # Model with any work over 11 year period as predictor compared to
   # Model interacting race with any work
   model1 <- coxph(Surv(time = dem_year, event = dementia) ~ cv1age + site + 
                     gender + apo4 + educ + faminc +

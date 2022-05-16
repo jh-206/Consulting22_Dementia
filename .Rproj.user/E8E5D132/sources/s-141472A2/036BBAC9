@@ -3,7 +3,7 @@
     "path": "C:/Projects/Consulting22_Dementia/Code/modeling.R",
     "project_path": "Code/modeling.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "4075985440",
     "contents": "",
     "dirty": false,
     "created": 1652467056413.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "83,13",
-        "scrollLine": "0"
+        "cursorPosition": "61,68",
+        "scrollLine": "60"
     },
     "folds": "",
-    "lastKnownWriteTime": 1652463900,
+    "lastKnownWriteTime": 1652675457,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1652463900,
+    "last_content_update": 1652675457237,
     "read_only": false,
     "read_only_alternatives": []
 }
