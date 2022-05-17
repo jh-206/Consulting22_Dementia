@@ -24,6 +24,7 @@
   
   # Filter out missing data completely
   sapply(df, function(col) sum(is.na(col)))
+  print(sum(!complete.cases(df2)))
   df2 <- df2[complete.cases(df2),]
   
   # Recode factors
@@ -34,7 +35,11 @@
   
   
   # Remove patients w dementia in year 1
+  print(sum(df2$dem_year == 1))
+  
   df2 <- df2[df2$dem_year!=1,]
+  
+  print(nrow(df)-nrow(df2))
 
 # Plots and Tables --------------------------------------------------------
   
@@ -96,5 +101,11 @@
   p1 <- ggcoxzph(xx)
   p2 <- ggcoxdiagnostics(model2)
   
+  
 
+  
+  
+  
+  
+  
   
