@@ -41,7 +41,18 @@
   
   print(nrow(df)-nrow(df2))
 
+  
+  
 # Plots and Tables --------------------------------------------------------
+  
+  data_tab <- data.frame(data.frame(
+    "Original Data" = nrow(df),
+    "Complete Data" = sum(!complete.cases(df)),
+    "Dementia Free Year One" = nrow(df2), check.names = F
+  ) %>% t())
+  names(data_tab) <- NULL
+  data_tab[,1] <- scales::comma(data_tab[,1])
+  
   
   format_num_pct <- function(x, val = 1){
     paste0(scales::comma(sum(x==val))," (",c(scales::percent(mean(x==val))), ")")
@@ -60,6 +71,17 @@
   table1 <- data.table::transpose(table1, keep.names = "Paid Work")
   colnames(table1) <- NULL
   knitr::kable(table1)
+  
+  
+  work_tab <- df2 %>%
+    filter(any_work==1) %>% 
+    group_by(Race = race) %>% 
+    summarise(
+      `N` = scales::comma(n()),
+      `Dementia Diagnosis` = format_num_pct(dementia)
+      ) %>% 
+    mutate(Race = c("Black", "White"))
+  knitr::kable(work_tab)
   
 # Cox PH Models ------------------------------------------------------------
 
