@@ -22,8 +22,8 @@
   
   # Vector of naming conventions of needed variable. 
   ## Note: some Need to be changed for different years, using pattern matching
-  vars_needed_yr1_vec <- c("habcid", "mmmscore", "fpvwcurj", "faminc", "educ", "lpschool")
-  vars_needed_vec <- c("habcid", "mmmscore", "curj")
+  vars_needed_yr1_vec <- c("habcid", "mmmscore", "fpvwcurj", "fpvwcurv", "faminc", "educ", "lpschool")
+  vars_needed_vec <- c("habcid", "mmmscore", "curj", "wcurv")
   
   # Function returns error if cannot read
   try_read_sas <- function(filename){
@@ -87,24 +87,25 @@
   for(f in year_files){load(f)}
   
   ## Rename and merge. Add year column
-  colnames(year1) <- c("habcid", "mmmscore", "educ", "faminc", "work", "educ_year")
+  colnames(year1) <- c("habcid", "mmmscore", "educ", "faminc", 
+                       "work", "volunteer", "educ_year")
   year1$year <- 1
   year1$educ_year[is.na(year1$educ)] <- NA
-  colnames(year3) <- c("habcid", "mmmscore", "work")
+  colnames(year3) <- c("habcid", "mmmscore", "work", "volunteer")
   year3$year <- 3
   colnames(year5) <- c("habcid", "mmmscore")
   year5$year <- 5
-  colnames(year8) <- c("habcid", "mmmscore", "work")
+  colnames(year8) <- c("habcid", "mmmscore", "work", "volunteer")
   year8$year <- 8
-  colnames(year9) <- c("habcid", "mmmscore", "work")
+  colnames(year9) <- c("habcid", "work", "volunteer")
   year9$year <- 9
-  colnames(year10) <- c("habcid", "mmmscore", "work")
+  colnames(year10) <- c("habcid", "mmmscore", "work", "volunteer")
   year10$year <- 10
-  colnames(year11) <- c("habcid", "mmmscore", "work")
+  colnames(year11) <- c("habcid", "mmmscore", "work", "volunteer")
   year11$year <- 11
   # Merge
   year_df <- dplyr::bind_rows(
-    year1 %>% dplyr::select("habcid", "mmmscore", "work", "year"), 
+    year1 %>% dplyr::select("habcid", "mmmscore", "work", "volunteer", "year"), 
     year3, year5, year8, year9, year10, year11
   )
   save(year_df, file = file.path(output_path, "Yearly Data.RData"))  

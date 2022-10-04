@@ -94,6 +94,28 @@
     df, total_work, by = "habcid"
   )
 
+# Handle Volunteer Variable -----------------------------------------------
+
+  # Total Years Volunteered
+  total_vol <- year_df %>% 
+    left_join(dem_df %>% select(habcid, dem_year), by = "habcid") %>% 
+    group_by(habcid) %>% 
+    summarise(
+      total_vol_years = sum(volunteer, na.rm = T),
+      years_vol_pre_dem = sum(volunteer[year<dem_year], na.rm = T),
+      years_vol_post_dem = sum(volunteer[year>=dem_year], na.rm = T)
+    )
+  
+  
+  
+  
+  total_work$any_vol <- total_vol$total_vol_years != 0  
+  
+  # Join data
+  df <- dplyr::left_join(
+    df, total_vol, by = "habcid"
+  )
+
 # Save Data ---------------------------------------------------------------
 
   save(df, file = file.path(output_path, "Analysis Data.RData"))
