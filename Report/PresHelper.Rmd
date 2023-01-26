@@ -1,0 +1,43 @@
+---
+title: "Presentation Helper Code"
+author: "JH"
+date: "2022-09-06"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr); library(ggplot2); library(survival); library(survminer)
+data_path <- "C:/Users/jhirs/Documents/Projects/Consulting22_Dementia/data"
+output_path <- "C:/Users/jhirs/Documents/Projects/Consulting22_Dementia/Outputs/"
+load(file.path(data_path, "Analysis Data.RData"))
+load(file.path(output_path, "FinalModelingData.RData"))
+```
+cv1age + site + 
+                    gender + apo4 + educ + faminc +
+                    race*any_work
+```{r}
+knitr::kable(head(
+  df2|>
+    select(
+      dem_year, dementia, cv1age, site, gender, apo4, educ, faminc, race, any_work
+    ) |>
+    rename(
+      `ID` = habcid,
+      `Onset Year` = dem_year,
+      `Dementia` = dementia,
+      `Age` = cv1age,
+      `Study Site`=site,
+      `Gender` = gender,
+      `Apoe4` = apo4,
+      `Education` = educ,
+      `Income` = faminc,
+      `Race` = race,
+      `Work Status` = any_work
+    )
+  ))
+```
+

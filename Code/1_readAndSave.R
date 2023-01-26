@@ -22,8 +22,10 @@
   
   # Vector of naming conventions of needed variable. 
   ## Note: some Need to be changed for different years, using pattern matching
-  vars_needed_yr1_vec <- c("habcid", "mmmscore", "fpvwcurj", "fpvwcurv", "faminc", "educ", "lpschool")
-  vars_needed_vec <- c("habcid", "mmmscore", "curj", "wcurv")
+  vars_needed_yr1_vec <- c("habcid", "mmmscore", "fpvwcurj", "fpvwcurv", "faminc", "educ", "lpschool", 
+                           "hqssrclo", "hqssfclo")
+  vars_needed_vec <- c("habcid", "mmmscore", "curj", "wcurv",
+                       "hqssrclo", "hqssfclo")
   
   # Function returns error if cannot read
   try_read_sas <- function(filename){
@@ -87,20 +89,28 @@
   for(f in year_files){load(f)}
   
   ## Rename and merge. Add year column
+  year1$rfclose <- year1$hqssrclo + year1$hqssfclo # sum of social support vars
+  year1 <- year1[,!names(year1) %in% c("hqssrclo", "hqssfclo")] # remove other 2 social vars
   colnames(year1) <- c("habcid", "mmmscore", "educ", "faminc", 
-                       "work", "volunteer", "educ_year")
+                       "work", "volunteer", "educ_year", "rfclose")
   year1$year <- 1
   year1$educ_year[is.na(year1$educ)] <- NA
+  
   colnames(year3) <- c("habcid", "mmmscore", "work", "volunteer")
   year3$year <- 3
+  
   colnames(year5) <- c("habcid", "mmmscore")
   year5$year <- 5
+  
   colnames(year8) <- c("habcid", "mmmscore", "work", "volunteer")
   year8$year <- 8
+  
   colnames(year9) <- c("habcid", "work", "volunteer")
   year9$year <- 9
+  
   colnames(year10) <- c("habcid", "mmmscore", "work", "volunteer")
   year10$year <- 10
+  
   colnames(year11) <- c("habcid", "mmmscore", "work", "volunteer")
   year11$year <- 11
   # Merge
@@ -128,7 +138,7 @@
   ph <- ph[,c("habcid", "race", "cv1age", "cv1date", "site", "gender")]
   
   patient_df <- dplyr::left_join(ph, dna, by = "habcid")
-  patient_df <- dplyr::left_join(patient_df, year1 %>% select("habcid", "educ", "faminc"), 
+  patient_df <- dplyr::left_join(patient_df, year1 %>% select("habcid", "educ", "faminc", "rfclose"), 
                                  by = "habcid")
 
   save(patient_df, file = file.path(output_path, "Patient Data.RData"))  
@@ -190,6 +200,7 @@
                   "s8admdt", "s9admdt", "s10admdt", "s11admdt", "s12admdt", "s13admdt", "s14admdt") # hospital visit date
   dem_vars <- c("s1dem1", "s2dem1", "s3dem1", "s4dem1", "s5dem1", "s6dem1", "s7dem1", 
                 "s8dem1", "s9dem1", "s10dem1", "s11dem1", "s12dem1", "s13dem1", "s14dem1") # dementia diagnosis 
+  
   psych <- psych[,c("habcid", admdt_vars,dem_vars)]
   
   
@@ -219,5 +230,22 @@
   save(diagnosis_df, file = file.path(output_path, "Diagnosis Data.RData"))
   
   
+
+# Chronic Conditions ------------------------------------------------------
+
+  ## Other chronic conditions
+  df <- haven::read_sas(file.path(data_path, "Outcomes/previncdz.sas7bdat"))
+  names(df) <- tolower(names(df))
   
+  chronic_vars <- c("y1pcbvd", "y1pcvd", "y1phbp1", "y1pdepr1") # cerebral vascular disease variables
+  df <- df[, names(df) %in% c("habcid", chronic_vars)]
+
+  save(diagnosis_df, file = file.path(output_path, "Chronic Conditions Data.RData"))
   
+    
+  
+  ## Diabetes
+  # df <- haven::read_sas(file.path(data_path, "Outcomes/diabetes.sas7bdat"))
+  # names(df) <- tolower(names(df))
+  # 
+  # "y1pdiab"
